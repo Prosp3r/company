@@ -1,20 +1,20 @@
 package app
 
 import (
+	"github.com/Prosp3r/company/conf"
+	"github.com/Prosp3r/company/handler"
+	"github.com/Prosp3r/company/lib/cache"
+	"github.com/Prosp3r/company/lib/contx"
+	"github.com/Prosp3r/company/lib/cors"
+	"github.com/Prosp3r/company/lib/template"
 	mcache "github.com/go-macaron/cache"
 	"github.com/go-macaron/gzip"
 	"github.com/go-macaron/i18n"
 	"github.com/go-macaron/jade"
 	"github.com/go-macaron/session"
 	"github.com/go-macaron/toolbox"
-	"github.com/Prosp3r/company/conf"
-	"github.com/Prosp3r/company/handler"
-	"github.com/Prosp3r/company/lib/cache"
-	"github.com/Prosp3r/company/lib/contx"
-	"github.com/Prosp3r/company/lib/template"
-	"github.com/Prosp3r/company/lib/cors"
-	"gopkg.in/macaron.v1"
 	"github.com/prometheus/client_golang/prometheus/promhttp"
+	"gopkg.in/macaron.v1"
 )
 
 //SetupMiddlewares configures the middlewares using in each web request
@@ -38,22 +38,22 @@ func SetupMiddlewares(app *macaron.Macaron) {
 		Funcs:     template.FuncMaps(),
 	}))
 	app.Use(macaron.Renderer(macaron.RenderOptions{
-    	Directory: "public/templates",
-    	Funcs:     template.FuncMaps(),
-    }))
+		Directory: "public/templates",
+		Funcs:     template.FuncMaps(),
+	}))
 	//Cache in memory
 	app.Use(mcache.Cacher(
 		cache.Option(conf.Cfg.Section("").Key("cache_adapter").Value()),
 	))
 	/*
-	Redis Cache
-	Add this lib to import session: _ "github.com/go-macaron/cache/redis"
-	Later replaces the cache in memory instructions for the lines below
-	optCache := mcache.Options{
-			Adapter:       conf.Cfg.Section("").Key("cache_adapter").Value(),
-			AdapterConfig: conf.Cfg.Section("").Key("cache_adapter_config").Value(),
-		}
-	app.Use(mcache.Cacher(optCache))
+		Redis Cache
+		Add this lib to import session: _ "github.com/go-macaron/cache/redis"
+		Later replaces the cache in memory instructions for the lines below
+		optCache := mcache.Options{
+				Adapter:       conf.Cfg.Section("").Key("cache_adapter").Value(),
+				AdapterConfig: conf.Cfg.Section("").Key("cache_adapter_config").Value(),
+			}
+		app.Use(mcache.Cacher(optCache))
 	*/
 	app.Use(session.Sessioner())
 	app.Use(contx.Contexter())
@@ -72,30 +72,35 @@ func SetupRoutes(app *macaron.Macaron) {
 	//Prometheus metrics
 	app.Get("/metrics", promhttp.Handler())
 
-	/*
-	
-	//Basic OAuth2 endpoint templates
-	app.Group("/oauth2", func() {
-		app.Get("/token", auth.GetAccessToken)
-		app.Get("/credentials/:idclient", auth.GetOauthUserCredentials)
-		app.Post("/initializecredentials", auth.InitializeUserCredentials)
-	})
-
-	*/
+	//User creation and Basic 2FA access
+	app.Post("/user/create", handler.CreateStaff)
+	app.Get("/user/create", handler.GetStaff)
+	app.Put("/users/update", handler.UpdateStaff)
 
 	/*
 
-	//Example how to bind request params into a struct and inject into Handler and endpoints protected 
-	//with OAuth2 authentication
-	app.Group("/api", func() {
-		app.Group("/v1", func() {
-			app.Post("/test/send", binding.Bind(model.SendRequestForm{}), handler.SendHandler)
-			app.Post("/wallet", binding.Bind(model.WalletRequestJSON{}}), handler.CreateWalletHandler)
+		//Basic OAuth2 endpoint templates
+		app.Group("/oauth2", func() {
+			app.Get("/token", auth.GetAccessToken)
+			app.Get("/credentials/:idclient", auth.GetOauthUserCredentials)
+			app.Post("/initializecredentials", auth.InitializeUserCredentials)
 		})
-	}, auth.LoginRequiredAPISystem)
 
 	*/
-	
+
+	/*
+
+		//Example how to bind request params into a struct and inject into Handler and endpoints protected
+		//with OAuth2 authentication
+		app.Group("/api", func() {
+			app.Group("/v1", func() {
+				app.Post("/test/send", binding.Bind(model.SendRequestForm{}), handler.SendHandler)
+				app.Post("/wallet", binding.Bind(model.WalletRequestJSON{}}), handler.CreateWalletHandler)
+			})
+		}, auth.LoginRequiredAPISystem)
+
+	*/
+
 	/*
 		//An example to test DB connection
 		app.Get("", func() string {

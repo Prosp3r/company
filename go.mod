@@ -5,6 +5,7 @@ go 1.17
 require (
 	github.com/denisenkom/go-mssqldb v0.11.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
+	github.com/dustinkirkland/golang-petname v0.0.0-20191129215211-8e5a1ed0cff0
 	github.com/felipeweb/gopher-utils v0.0.0-20161101033030-05a00fc86ef5
 	github.com/go-floki/jade v0.0.0-20210701092800-c3b625c6f852 // indirect
 	github.com/go-macaron/binding v1.2.0

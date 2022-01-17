@@ -1,6 +1,8 @@
 package handler
 
-import "time"
+import (
+	"time"
+)
 
 /*
 AppChecker - Application Checker
