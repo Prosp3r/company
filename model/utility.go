@@ -20,18 +20,6 @@ func init() {
 	rand.Seed(time.Now().UTC().Unix())
 }
 
-// func DbConn() (db *sql.DB) {
-// 	dbDriver := os.Getenv("SWIPEDBDRIVER")
-// 	dbUser := os.Getenv("SWIPEDBUSER")
-// 	dbPass := os.Getenv("SWIPEDBPASS")
-// 	dbName := os.Getenv("SWIPEDBNAME")
-// 	db, err := sql.Open(dbDriver, dbUser+":"+dbPass+"@/"+dbName)
-// 	if err != nil {
-// 		panic(err.Error())
-// 	}
-// 	return db
-// }
-
 func RandomCode(length int) string {
 	charset := "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	code := make([]byte, length)

@@ -3,6 +3,8 @@ package logic
 import (
 	"errors"
 	"fmt"
+
+	"github.com/Prosp3r/company/conf"
 )
 
 type Staff struct {
@@ -36,15 +38,12 @@ func CreateStaff(si AddStaffInput) (*Staff, error) {
 	nU.Email = si.Email
 	nU.Phone = si.Phone
 
-	db := DbConn()
+	db, err := conf.GetDB()
+	_ = FailOnError(err, "connecting to DB", logTag)
 	defer db.Close()
-	PQ, err := db.Prepare("INSERT INTO staff(name, email, phone, entrytime) VALUES(?, ?, ?, ?)")
-	fe := FailOnError(err, "Preparing db insert", logTag)
-	if fe == true {
-		return nil, err
-	}
-	ins, err := PQ.Exec(nU.Name, nU.Email, nU.Phone, nU.Entrytime)
-	fe = FailOnError(err, "Executing statement", logTag)
+	PQ := `INSERT INTO "staff"("name", "email", "phone", "entrytime") VALUES($1, $2, $3, $4)`
+	ins, err := db.Exec(PQ, nU.Name, nU.Email, nU.Phone, nU.Entrytime)
+	fe := FailOnError(err, "Executing statement", logTag)
 	if fe == true {
 		return nil, err
 	}
@@ -65,7 +64,8 @@ func LoadAllStaff() bool {
 
 	var u Staff
 
-	db := DbConn()
+	db, err := conf.GetDB()
+	_ = FailOnError(err, "connecting to DB", logTag)
 	defer db.Close()
 
 	PQ, err := db.Query("SELECT id, name, email, phone, entrytime FROM staff ORDER BY id DESC")
@@ -73,6 +73,8 @@ func LoadAllStaff() bool {
 	if em == true {
 		return false
 	}
+	defer PQ.Close()
+	
 
 	for PQ.Next() {
 		err = PQ.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Entrytime)
