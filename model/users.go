@@ -1,4 +1,4 @@
-package logic
+package models
 
 import (
 	"errors"
@@ -74,7 +74,7 @@ func LoadAllStaff() bool {
 		return false
 	}
 	defer PQ.Close()
-	
+
 
 	for PQ.Next() {
 		err = PQ.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Entrytime)
