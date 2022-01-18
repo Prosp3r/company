@@ -16,15 +16,27 @@ type Staff struct {
 }
 
 type AddStaffInput struct {
+	Name  string `json:"name,omitempty"`
+	Email string `json:"email,omitempty"`
 	Phone string `json:"phone,omitempty"`
-	Email string `json:"email"`
 }
 
 var (
 	AllStaffList []Staff
 	AllStaffMap  = make(map[string]Staff)
 )
+/*
+CREATE TABLE public.staff (
+	id bigint NOT NULL AUTO_INCREMENT,
+	"name" varchar NULL,
+	email varchar NULL,
+	phone varchar NULL,
+	entrytime bigint NULL
+);
+CREATE INDEX staff_id_idx ON public.staff (id);
+CREATE UNIQUE INDEX staff_email_idx ON public.staff (email);
 
+*/
 //CreateUser -
 func CreateStaff(si AddStaffInput) (*Staff, error) {
 	logTag := "Creating New Staff"
@@ -40,8 +52,8 @@ func CreateStaff(si AddStaffInput) (*Staff, error) {
 
 	db, err := conf.GetDB()
 	_ = FailOnError(err, "connecting to DB", logTag)
-	defer db.Close()
-	PQ := `INSERT INTO "staff"("name", "email", "phone", "entrytime") VALUES($1, $2, $3, $4)`
+	// defer db.Close()
+	PQ := `INSERT INTO "public.staff"("name", "email", "phone", "entrytime") VALUES($1, $2, $3, $4)`
 	ins, err := db.Exec(PQ, nU.Name, nU.Email, nU.Phone, nU.Entrytime)
 	fe := FailOnError(err, "Executing statement", logTag)
 	if fe == true {
@@ -66,15 +78,14 @@ func LoadAllStaff() bool {
 
 	db, err := conf.GetDB()
 	_ = FailOnError(err, "connecting to DB", logTag)
-	defer db.Close()
+	// defer db.Close()
 
-	PQ, err := db.Query("SELECT id, name, email, phone, entrytime FROM staff ORDER BY id DESC")
+	PQ, err := db.Query("SELECT id, name, email, phone, entrytime FROM public.staff ORDER BY id DESC")
 	em := FailOnError(err, "Preparing verifications Query", logTag)
 	if em == true {
 		return false
 	}
-	defer PQ.Close()
-
+	// defer PQ.Close()
 
 	for PQ.Next() {
 		err = PQ.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Entrytime)
@@ -92,9 +103,11 @@ func LoadAllStaff() bool {
 //isEmailUnique - checks if email has not been used previously.
 func IsEmailUnique(email string) bool {
 	//LoadAllUsers()
-	for _, v := range AllStaffList {
-		if v.Email == email {
-			return false
+	if len(AllStaffList) > 0 {
+		for _, v := range AllStaffList {
+			if v.Email == email {
+				return false
+			}
 		}
 	}
 	return true
@@ -102,10 +115,12 @@ func IsEmailUnique(email string) bool {
 
 //isPhoneUnique - checks if a phone number has not been used peviously.
 func IsPhoneUnique(phone string) bool {
-	LoadAllStaff()
-	for _, v := range AllStaffList {
-		if v.Phone == phone {
-			return false
+	// LoadAllStaff()
+	if len(AllStaffList) > 0 {
+		for _, v := range AllStaffList {
+			if v.Phone == phone {
+				return false
+			}
 		}
 	}
 	return true
