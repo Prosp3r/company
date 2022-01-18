@@ -22,11 +22,6 @@ func CreateStaff(w http.ResponseWriter, r *http.Request) {
 
 	// loadStaff := model.LoadAllStaff()
 	_ = model.LoadAllStaff()
-	// if loadStaff == false {
-	// 	ResponseJSON(w, http.StatusInternalServerError, http.StatusInternalServerError,
-	// 		fmt.Sprintf("%v Could not load user information. Error: %v", logTag, err))
-	// 	return
-	// }
 
 	var addStaffInput model.AddStaffInput
 	if err := json.Unmarshal(sentInfo, &addStaffInput); err != nil {
@@ -75,7 +70,7 @@ func GetStaff(w http.ResponseWriter, r *http.Request) {
 	_ = model.FailOnError(err, "Converting to json", logTag)
 
 	ResponseJSON(w, http.StatusOK, http.StatusOK, staffJson)
-	return 
+	return
 }
 
 func UpdateStaff(w http.ResponseWriter, r *http.Request) {}

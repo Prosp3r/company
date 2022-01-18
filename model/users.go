@@ -3,6 +3,7 @@ package model
 import (
 	"errors"
 	"fmt"
+	"time"
 
 	"github.com/Prosp3r/company/conf"
 )
@@ -25,6 +26,7 @@ var (
 	AllStaffList []Staff
 	AllStaffMap  = make(map[string]Staff)
 )
+
 /*
 CREATE TABLE public.staff (
 	id bigint NOT NULL AUTO_INCREMENT,
@@ -49,19 +51,20 @@ func CreateStaff(si AddStaffInput) (*Staff, error) {
 	nU.Name = FakeName
 	nU.Email = si.Email
 	nU.Phone = si.Phone
+	nU.Entrytime = time.Now().Unix()
 
 	db, err := conf.GetDB()
 	_ = FailOnError(err, "connecting to DB", logTag)
 	// defer db.Close()
-	PQ := `INSERT INTO "public.staff"("name", "email", "phone", "entrytime") VALUES($1, $2, $3, $4)`
-	ins, err := db.Exec(PQ, nU.Name, nU.Email, nU.Phone, nU.Entrytime)
-	fe := FailOnError(err, "Executing statement", logTag)
-	if fe == true {
-		return nil, err
-	}
+	var lastInsertId int64
 
-	lastInsertId, err := ins.LastInsertId()
-	fe = FailOnError(err, "Executing LastInsertId", logTag)
+	PQ := `INSERT INTO "staff"("name", "email", "phone", "entrytime") VALUES($1, $2, $3, $4) RETURNING id`
+	// ins, err := db.Exec(PQ, nU.Name, nU.Email, nU.Phone, nU.Entrytime)
+	Q, err := db.Prepare(PQ)
+	_ = FailOnError(err, "Preparing qery", logTag)
+
+	err = Q.QueryRow(nU.Name, nU.Email, nU.Phone, nU.Entrytime).Scan(&lastInsertId)
+	fe := FailOnError(err, "Executing statement", logTag)
 	if fe == true {
 		return nil, err
 	}
@@ -80,7 +83,7 @@ func LoadAllStaff() bool {
 	_ = FailOnError(err, "connecting to DB", logTag)
 	// defer db.Close()
 
-	PQ, err := db.Query("SELECT id, name, email, phone, entrytime FROM public.staff ORDER BY id DESC")
+	PQ, err := db.Query("SELECT id, name, email, phone, entrytime FROM staff ORDER BY id DESC")
 	em := FailOnError(err, "Preparing verifications Query", logTag)
 	if em == true {
 		return false
@@ -115,9 +118,10 @@ func IsEmailUnique(email string) bool {
 
 //isPhoneUnique - checks if a phone number has not been used peviously.
 func IsPhoneUnique(phone string) bool {
-	// LoadAllStaff()
+	LoadAllStaff()
 	if len(AllStaffList) > 0 {
 		for _, v := range AllStaffList {
+			fmt.Printf("%v : %v - %v - %v - %v", v.ID, v.Name, v.Email, v.Phone, v.Entrytime)
 			if v.Phone == phone {
 				return false
 			}
