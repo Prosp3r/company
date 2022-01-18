@@ -59,7 +59,6 @@ func CreateStaff(si AddStaffInput) (*Staff, error) {
 	var lastInsertId int64
 
 	PQ := `INSERT INTO "staff"("name", "email", "phone", "entrytime") VALUES($1, $2, $3, $4) RETURNING id`
-	// ins, err := db.Exec(PQ, nU.Name, nU.Email, nU.Phone, nU.Entrytime)
 	Q, err := db.Prepare(PQ)
 	_ = FailOnError(err, "Preparing qery", logTag)
 

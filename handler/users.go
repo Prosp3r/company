@@ -52,7 +52,7 @@ func CreateStaff(w http.ResponseWriter, r *http.Request) {
 
 	var msg string
 	if createStaff.ID > 0 {
-		msg = "Adding new staff was successful."
+		msg = fmt.Sprintf("Adding new staff was successful. %v", createStaff.ID)
 	}
 	ResponseJSON(w, http.StatusOK, http.StatusOK, msg)
 	return
