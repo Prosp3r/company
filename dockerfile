@@ -9,4 +9,8 @@ ADD conf/ /conf
 ADD public/ /public
 ADD locale/ /locale
 
+
+#to be added to mercurius
+EXPOSE 8080
+#end to be added to mercurius
 CMD [ "/company" ]
