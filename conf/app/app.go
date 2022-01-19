@@ -72,10 +72,11 @@ func SetupRoutes(app *macaron.Macaron) {
 	//Prometheus metrics
 	app.Get("/metrics", promhttp.Handler())
 
-	//User creation and Basic 2FA access
-	app.Post("/user/create", handler.CreateStaff)
-	app.Get("/user/create", handler.GetStaff)
-	app.Put("/users/update", handler.UpdateStaff)
+	//User/staff creation
+	app.Post("/users/", handler.CreateStaff)
+	app.Get("/users/", handler.GetAllStaff)
+	app.Put("/users/", handler.UpdateStaff)
+	app.Delete("/users/", handler.DeleteStaff)
 
 	/*
 

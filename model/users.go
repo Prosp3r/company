@@ -22,6 +22,10 @@ type AddStaffInput struct {
 	Phone string `json:"phone,omitempty"`
 }
 
+type DelStaffInput struct {
+	ID int64 `json:"id,omitempty"`
+}
+
 var (
 	AllStaffList []Staff
 	AllStaffMap  = make(map[string]Staff)
@@ -43,12 +47,12 @@ CREATE UNIQUE INDEX staff_email_idx ON public.staff (email);
 func CreateStaff(si AddStaffInput) (*Staff, error) {
 	logTag := "Creating New Staff"
 
-	FakeName, err := GetPetName(1, "")
-	_ = FailOnError(err, "generaing random name", logTag)
+	// FakeName, err := GetPetName(1, "")
+	// _ = FailOnError(err, "generaing random name", logTag)
 
 	var nU Staff
 
-	nU.Name = FakeName
+	nU.Name = si.Name
 	nU.Email = si.Email
 	nU.Phone = si.Phone
 	nU.Entrytime = time.Now().Unix()
@@ -75,6 +79,7 @@ func CreateStaff(si AddStaffInput) (*Staff, error) {
 //GetAllUsers - Populate the AllUsers slicee for quick manipulative access
 func LoadAllStaff() bool {
 	logTag := "LoadAllUsers"
+	var AllStaffListx []Staff
 
 	var u Staff
 
@@ -87,7 +92,6 @@ func LoadAllStaff() bool {
 	if em == true {
 		return false
 	}
-	// defer PQ.Close()
 
 	for PQ.Next() {
 		err = PQ.Scan(&u.ID, &u.Name, &u.Email, &u.Phone, &u.Entrytime)
@@ -97,8 +101,9 @@ func LoadAllStaff() bool {
 		}
 
 		AllStaffMap[u.Phone] = u
-		AllStaffList = append(AllStaffList, u)
+		AllStaffListx = append(AllStaffListx, u)
 	}
+	AllStaffList = AllStaffListx
 	return true
 }
 
@@ -117,7 +122,7 @@ func IsEmailUnique(email string) bool {
 
 //isPhoneUnique - checks if a phone number has not been used peviously.
 func IsPhoneUnique(phone string) bool {
-	LoadAllStaff()
+	// LoadAllStaff()
 	if len(AllStaffList) > 0 {
 		for _, v := range AllStaffList {
 			fmt.Printf("%v : %v - %v - %v - %v", v.ID, v.Name, v.Email, v.Phone, v.Entrytime)
@@ -151,4 +156,29 @@ func GetDetailsEmail(email string) (*Staff, error) {
 func UpadateStaff(userid int, content interface{}) (*Staff, error) {
 
 	return nil, nil
+}
+
+func DeleteStaff(userid int64) bool {
+	logTag := "DeleteStaff-model"
+	db, err := conf.GetDB()
+	fce := FailOnError(err, "connecting to DB", logTag)
+	if fce == true {
+		return false
+	}
+
+	PQ := `DELETE FROM "staff" WHERE id=$1`
+	del, err := db.Exec(PQ, userid)
+	fe := FailOnError(err, "Delete qery", logTag)
+	if fe == true {
+		return false
+	}
+
+	ar, err := del.RowsAffected()
+	_ = FailOnError(err, "Checking Rows affected", logTag)
+
+	if ar > 0 {
+		return true
+	}
+
+	return false
 }

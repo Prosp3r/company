@@ -58,19 +58,53 @@ func CreateStaff(w http.ResponseWriter, r *http.Request) {
 	return
 }
 
-func GetStaff(w http.ResponseWriter, r *http.Request) {
-	logTag := "Get Staff"
+func GetAllStaff(w http.ResponseWriter, r *http.Request) {
+	// logTag := "Get Staff"
 	loadStaf := model.LoadAllStaff()
 	if loadStaf == false {
 		ResponseJSON(w, http.StatusInternalServerError, http.StatusInternalServerError, fmt.Sprintf("Please try again later"))
 		return
 	}
 
-	staffJson, err := json.Marshal(model.AllStaffList)
-	_ = model.FailOnError(err, "Converting to json", logTag)
-
-	ResponseJSON(w, http.StatusOK, http.StatusOK, staffJson)
+	ResponseJSON(w, http.StatusOK, http.StatusOK, model.AllStaffList)
 	return
 }
 
-func UpdateStaff(w http.ResponseWriter, r *http.Request) {}
+func UpdateStaff(w http.ResponseWriter, r *http.Request) {
+
+}
+
+func DeleteStaff(w http.ResponseWriter, r *http.Request) {
+	logTag := "UpdateStaff"
+	sentInfo, err := ioutil.ReadAll(r.Body)
+	fe := model.FailOnError(err, "Reading sent datta", logTag)
+	if fe == true {
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
+			fmt.Sprintf("%v Could not read sent information. Error: %v", logTag, err))
+		return
+	}
+
+	var DelEntry model.DelStaffInput
+
+	if err := json.Unmarshal(sentInfo, &DelEntry); err != nil {
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
+			fmt.Sprintf("%s Failed to convert sent user data. Error: %v", logTag, err))
+		return
+	}
+
+	_ = model.LoadAllStaff()
+	// fmt.Printf("GOT ID: %v \n", DelEntry.ID)
+	for _, v := range model.AllStaffList {
+		if v.ID == DelEntry.ID {
+			//user exists
+			if model.DeleteStaff(DelEntry.ID) == true {
+				msg := "Deleting staff was successful."
+				ResponseJSON(w, http.StatusOK, http.StatusOK, msg)
+				return
+			}
+		}
+	}
+	msg := "Staff with given id does not exist."
+	ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest, msg)
+	return
+}
