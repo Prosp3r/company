@@ -71,13 +71,54 @@ func GetAllStaff(w http.ResponseWriter, r *http.Request) {
 }
 
 func UpdateStaff(w http.ResponseWriter, r *http.Request) {
+	logTag := "UpdateStaff"
+	sentInfo, err := ioutil.ReadAll(r.Body)
+	fe := model.FailOnError(err, "Reading sent data", logTag)
+	if fe == true {
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
+			fmt.Sprintf("%v Could not read sent information. Error: %v", logTag, err))
+		return
+	}
 
+	var UpdateEntry model.UpdateStaffInput
+
+	if err := json.Unmarshal(sentInfo, &UpdateEntry); err != nil {
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
+			fmt.Sprintf("%s Failed to convert sent staff data. Error: %v", logTag, err))
+		return
+	}
+
+	//Validate userid
+	if UpdateEntry.ID < 1 {
+		msg := "Entry must have a valid id field for staff id"
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest, msg)
+		return
+	}
+
+	_ = model.LoadAllStaff()
+	
+	if model.UserExistID(UpdateEntry.ID) == false {
+		msg := fmt.Sprintf("Staff user with id %v does not exist", UpdateEntry.ID)
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest, msg)
+		return
+	}
+
+	update, err := model.UpadateStaff(UpdateEntry.ID, UpdateEntry)
+	feu := model.FailOnError(err, "Updating staff data", logTag)
+	if feu == true {
+		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
+			fmt.Sprintf("%v Could not update staff data with sent information. Error: %v", logTag, err))
+		return
+	}
+
+	ResponseJSON(w, http.StatusOK, http.StatusOK, update)
+	return
 }
 
 func DeleteStaff(w http.ResponseWriter, r *http.Request) {
-	logTag := "UpdateStaff"
+	logTag := "DeleteStaff"
 	sentInfo, err := ioutil.ReadAll(r.Body)
-	fe := model.FailOnError(err, "Reading sent datta", logTag)
+	fe := model.FailOnError(err, "Reading sent data", logTag)
 	if fe == true {
 		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
 			fmt.Sprintf("%v Could not read sent information. Error: %v", logTag, err))
@@ -88,12 +129,11 @@ func DeleteStaff(w http.ResponseWriter, r *http.Request) {
 
 	if err := json.Unmarshal(sentInfo, &DelEntry); err != nil {
 		ResponseJSON(w, http.StatusBadRequest, http.StatusBadRequest,
-			fmt.Sprintf("%s Failed to convert sent user data. Error: %v", logTag, err))
+			fmt.Sprintf("%s Failed to convert sent staff data. Error: %v", logTag, err))
 		return
 	}
 
 	_ = model.LoadAllStaff()
-	// fmt.Printf("GOT ID: %v \n", DelEntry.ID)
 	for _, v := range model.AllStaffList {
 		if v.ID == DelEntry.ID {
 			//user exists

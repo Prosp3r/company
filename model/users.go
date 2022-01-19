@@ -22,6 +22,13 @@ type AddStaffInput struct {
 	Phone string `json:"phone,omitempty"`
 }
 
+type UpdateStaffInput struct {
+	ID    int64  `json:"id,omitempty"`
+	Name  string `json:"name,omitempty"`
+	Email string `json:"email,omitempty"`
+	Phone string `json:"phone,omitempty"`
+}
+
 type DelStaffInput struct {
 	ID int64 `json:"id,omitempty"`
 }
@@ -125,13 +132,24 @@ func IsPhoneUnique(phone string) bool {
 	// LoadAllStaff()
 	if len(AllStaffList) > 0 {
 		for _, v := range AllStaffList {
-			fmt.Printf("%v : %v - %v - %v - %v", v.ID, v.Name, v.Email, v.Phone, v.Entrytime)
 			if v.Phone == phone {
 				return false
 			}
 		}
 	}
 	return true
+}
+
+//UserExistID - returns true if the user with give id does exist in db
+func UserExistID(userid int64) bool {
+	if len(AllStaffList) > 0 {
+		for _, v := range AllStaffList {
+			if v.ID == userid {
+				return true
+			}
+		}
+	}
+	return false
 }
 
 func GetDetailsPhone(phone string) (*Staff, error) {
@@ -153,9 +171,38 @@ func GetDetailsEmail(email string) (*Staff, error) {
 	return nil, errors.New(fmt.Sprintf("Could not find user with email address %v", email))
 }
 
-func UpadateStaff(userid int, content interface{}) (*Staff, error) {
+func UpadateStaff(userid int64, usi UpdateStaffInput) (*Staff, error) {
+	logTag := "UpdateStaff-model"
+	db, err := conf.GetDB()
+	fce := FailOnError(err, "connecting to DB", logTag)
+	if fce == true {
+		return nil, err
+	}
 
-	return nil, nil
+	ttime := time.Now().Unix()
+	PQ := `UPDATE "staff" SET "name"=$2, "email"=$3, "phone"=$4, "entrytime"=$5 WHERE "id"=$1`
+	del, err := db.Exec(PQ, userid, usi.Name, usi.Email, usi.Phone, ttime)
+	fe := FailOnError(err, "Delete qery", logTag)
+	if fe == true {
+		return nil, err
+	}
+
+	ar, err := del.RowsAffected()
+	_ = FailOnError(err, "Checking Rows affected", logTag)
+
+	if ar > 0 {
+
+		var staff Staff
+		staff.ID = userid
+		staff.Name = usi.Name
+		staff.Email = usi.Email
+		staff.Phone = usi.Phone
+		staff.Entrytime = ttime
+
+		return &staff, nil
+	}
+
+	return nil, errors.New("- database record update failed")
 }
 
 func DeleteStaff(userid int64) bool {
