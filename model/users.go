@@ -38,18 +38,7 @@ var (
 	AllStaffMap  = make(map[string]Staff)
 )
 
-/*
-CREATE TABLE public.staff (
-	id bigint NOT NULL AUTO_INCREMENT,
-	"name" varchar NULL,
-	email varchar NULL,
-	phone varchar NULL,
-	entrytime bigint NULL
-);
-CREATE INDEX staff_id_idx ON public.staff (id);
-CREATE UNIQUE INDEX staff_email_idx ON public.staff (email);
 
-*/
 //CreateUser -
 func CreateStaff(si AddStaffInput) (*Staff, error) {
 	logTag := "Creating New Staff"
